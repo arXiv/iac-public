@@ -34,12 +34,11 @@ runs:
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v3
 
-    - name: Dump All Default Environment Variables
-      run: env
-
     - name: Deployment Routing
       id: check_env
       run: |
+        env | sort
+
         if [ "${{ github.ref_name }}" = "main" ]; then
           # For main branch, deploy to multiple environments
           echo "envs=development" >> $GITHUB_OUTPUT
