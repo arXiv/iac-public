@@ -40,7 +40,7 @@ runs:
         # env | sort
 
         if [ "${{ github.ref_name }}" = "main" ]; then
-          # For main branch, deploy to multiple environments
+          # For main branch, deploy to multiple environments by updating "envs=" with the environment names (comma-separated)
           echo "envs=development" >> $GITHUB_OUTPUT
           echo "image_tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
           echo "Deploying to multiple environments with latest tag"
