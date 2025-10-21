@@ -35,8 +35,8 @@ runs:
       uses: google-github-actions/setup-gcloud@v3
 
     - name: Dump All Default Environment Variables
-        run: env
-        
+      run: env
+
     - name: Deployment Routing
       id: check_env
       run: |
