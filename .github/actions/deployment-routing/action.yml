@@ -102,7 +102,6 @@ runs:
             -f image_tag="${{ steps.check_env.outputs.image_tag }}"; then
             echo "Failed to trigger workflow, trying alternative method..."
             exit 1
-            # --ref ${{ github.ref }} \
           fi
         done
       shell: bash
