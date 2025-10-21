@@ -1,4 +1,4 @@
-name: 'Deployment Routing'
+name: 'Service Deployment Routing'
 description: 'Route deployment based on branch/PR status and trigger appropriate deployment'
 
 inputs:
