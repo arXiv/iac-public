@@ -97,7 +97,7 @@ runs:
           # Try using the workflow file path first
           if ! gh workflow run .github/workflows/${{ inputs.deploy_workflow }} \
             --repo ${{ github.repository }} \
-            --ref rework4 \
+            --ref "${{ github.head_ref || github.ref_name }}" \
             -f env="$env" \
             -f image_tag="${{ steps.check_env.outputs.image_tag }}"; then
             echo "Failed to trigger workflow, trying alternative method..."
