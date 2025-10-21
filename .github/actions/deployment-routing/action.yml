@@ -93,6 +93,7 @@ runs:
         for env in "${ENVS[@]}"; do
           echo "Triggering deployment to: $env"
           gh workflow run ${{ inputs.deploy_workflow }} \
+            --repo ${{ github.repository }} \
             --ref ${{ github.ref }} \
             -f env="$env" \
             -f image_tag="${{ steps.check_env.outputs.image_tag }}"
