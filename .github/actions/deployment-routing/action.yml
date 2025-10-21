@@ -13,6 +13,9 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Set GitHub token
+      run: echo "GH_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+      shell: bash
     - name: Checkout code
       uses: actions/checkout@v4
 
