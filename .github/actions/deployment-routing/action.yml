@@ -16,11 +16,9 @@ runs:
     - name: Set GitHub token
       run: echo "GH_TOKEN=${{ github.token }}" >> $GITHUB_ENV
       shell: bash
+      
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Install GitHub CLI
-      uses: actions/setup-gh@v1
 
     - name: Deployment Routing
       id: check_env
