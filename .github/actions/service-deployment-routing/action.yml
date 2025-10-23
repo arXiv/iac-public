@@ -34,7 +34,7 @@ runs:
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v3
 
-    - name: Deployment Routing
+    - name: Service Deployment Routing
       id: check_env
       run: |
         # env | sort
@@ -99,7 +99,7 @@ runs:
         fi
       shell: bash
 
-    - name: Trigger Deployment
+    - name: Trigger Service Deployment
       if: steps.check_env.outputs.envs != ''
       run: |
         IFS=',' read -ra ENVS <<< "${{ steps.check_env.outputs.envs }}"
