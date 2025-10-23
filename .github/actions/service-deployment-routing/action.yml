@@ -76,8 +76,13 @@ runs:
             echo "No PR to main exists, proceeding with deployment"
           fi
 
+          # determine the name of the ephemeral environment (we had to put rules on this with respect to the cloud provider and our sanity)
           eph_env="${GITHUB_REPOSITORY//\//-}-$([ "${{ github.event_name }}" = "pull_request" ] && echo "$GITHUB_HEAD_REF" || echo "$GITHUB_REF_NAME")"
           eph_env=$(echo "$eph_env" | tr '[:upper:]' '[:lower:]')
+          # Replace single-quote, double-quote, space, and exclamation point with hyphens
+          eph_env=$(echo "$eph_env" | tr "' \"!" '-')
+          # Truncate to 30 characters
+          eph_env=$(echo "$eph_env" | cut -c1-30)
           echo "Checking for GCP project: $eph_env"
           
           # Check if GCP project exists
