@@ -37,7 +37,7 @@ runs:
     - name: Service Deployment Routing
       id: check_env
       run: |
-        # env | sort
+        env | sort
 
         if [ "${{ github.ref_name }}" = "main" ]; then
           # For main branch, deploy to multiple environments by updating "envs=" with the environment names (comma-separated)
