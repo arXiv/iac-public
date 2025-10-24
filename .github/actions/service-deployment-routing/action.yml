@@ -57,13 +57,13 @@ runs:
               echo "PR to main exists, skipping this deployment in preference of the 'PR to main'"
               exit 0
             fi
-            # # Check if this branch has PRs to other bases (not main) ...
-            # prs_to_other_bases=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName != "main")] | length')
-            # if [ "$prs_to_other_bases" -gt 0 ]; then
-            #   echo "Branch has PRs to multiple bases (not main), skipping deployment to avoid conflicts"
-            #   exit 0
-            # fi
-            # echo "No PR to main exists, proceeding with deployment"
+            # Check if this branch has PRs to other bases (not main) ...
+            prs_to_other_bases=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName != "main")] | length')
+            if [ "$prs_to_other_bases" -gt 0 ]; then
+              echo "Branch has PRs to multiple bases (not main), skipping deployment to avoid conflicts"
+              exit 0
+            fi
+            echo "No PR to main exists, proceeding with deployment"
           else
             # This is a branch build - check if there are ANY PRs involving this branch
             prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
