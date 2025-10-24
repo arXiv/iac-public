@@ -59,7 +59,7 @@ runs:
             fi
             # Check if this branch has PRs to other bases (not main) ...
             prs_to_other_bases=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName != "main")] | length')
-            if [ "$prs_to_other_bases" -gt 0 ]; then
+            if [ "$prs_to_other_bases" -gt 1 ]; then
               echo "Branch has PRs to multiple bases (not main), skipping deployment to avoid conflicts"
               exit 0
             fi
