@@ -39,7 +39,7 @@ runs:
       run: |
         env | sort
 
-        if [ "${{ github.ref_name }}" = "main" ]; then
+        if [[ "${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "master" ]]; then
           # For main branch, deploy to multiple environments by updating "envs=" with the environment names (comma-separated)
           echo "envs=development" >> $GITHUB_OUTPUT
           echo "image_tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
@@ -47,23 +47,23 @@ runs:
         else
 
           # Check deployment logic based on event type and PR status
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.base_ref }}" = "main" ]; then
+          if [[ "${{ github.event_name }}" == "pull_request" && ("${{ github.base_ref }}" == "main" || "${{ github.base_ref }}" == "master") ]]; then
             # This is a PR to main - deploy it
-            echo "This is a PR to main - proceeding with deployment"
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "This is a PR to main or master - proceeding with deployment"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # This is a PR to another branch - check if there's a PR to main
-            pr_to_main_exists=$(gh pr list --head "${{ github.head_ref }}" --base main --state open --json number --jq length)
+            pr_to_main_exists=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName == "main" or .baseRefName == "master")] | length')
             if [ "$pr_to_main_exists" -gt 0 ]; then
-              echo "PR to main exists, skipping this deployment in preference of the 'PR to main'"
+              echo "PR to main or master exists, skipping this deployment in preference of the 'PR to main or master'"
               exit 0
             fi
             # Check if this branch has PRs to other bases (not main) ...
-            prs_to_other_bases=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName != "main")] | length')
+            prs_to_other_bases=$(gh pr list --head "${{ github.head_ref }}" --state open --json baseRefName --jq '[.[] | select(.baseRefName != "main" and .baseRefName != "master")] | length')
             if [ "$prs_to_other_bases" -gt 1 ]; then
-              echo "Branch has PRs to multiple bases (not main), skipping deployment to avoid conflicts"
+              echo "Branch has PRs to multiple bases (not main or master), skipping deployment to avoid conflicts"
               exit 0
             fi
-            echo "No PR to main exists, proceeding with deployment"
+            echo "No PR to main or master exists, proceeding with deployment"
           else
             # This is a branch build - check if there are ANY PRs involving this branch
             prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
@@ -73,7 +73,7 @@ runs:
               echo "Found $total_prs PR(s) involving branch '${{ github.ref_name }}' - skipping deployment"
               exit 0
             fi
-            echo "No PR to main exists, proceeding with deployment"
+            echo "No PR to main or master exists, proceeding with deployment"
           fi
 
           # determine the name of the ephemeral environment (we had to put rules on this with respect to the cloud provider and our sanity)
