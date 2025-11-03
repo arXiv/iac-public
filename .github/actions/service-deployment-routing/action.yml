@@ -81,6 +81,8 @@ runs:
           eph_env=$(echo "$eph_env" | tr '[:upper:]' '[:lower:]')
           # Replace single-quote, double-quote, space, and exclamation point with hyphens
           eph_env=$(echo "$eph_env" | tr "' \"!" '-')
+          # Replace arxiv-arxiv- with arxiv-
+          eph_env=${eph_env//arxiv-arxiv-/arxiv-}
           # Truncate to 30 characters
           eph_env=$(echo "$eph_env" | cut -c1-30)
           echo "Checking for GCP project: $eph_env"
