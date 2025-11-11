@@ -46,7 +46,7 @@ runs:
           # For main branch, deploy to multiple environments by updating "envs=" with the environment names (comma-separated)
           echo "envs=development" >> $GITHUB_OUTPUT
           echo "image_tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
-          echo "Deploying to multiple environments with latest tag"
+          echo "Deploying to multiple environments with '${{ inputs.image_tag }}' tag"
         else
 
           # Check deployment logic based on event type and PR status
@@ -113,14 +113,28 @@ runs:
         for env in "${ENVS[@]}"; do
           echo "Triggering deployment to: $env"
 
-          if ! gh workflow run .github/workflows/${{ inputs.deploy_workflow }} \
-            --repo ${{ github.repository }} \
-            --ref "${{ github.head_ref || github.ref_name }}" \
-            -f env="$env" \
-            -f function_name="${{ inputs.function_name }}" \
-            -f image_tag="${{ steps.check_env.outputs.image_tag }}"; then
-            echo "Failed to trigger workflow, trying alternative method..."
-            exit 1
+          if [[ -n "${{ inputs.function_name }}" ]]; then
+
+            if ! gh workflow run .github/workflows/${{ inputs.deploy_workflow }} \
+              --repo ${{ github.repository }} \
+              --ref "${{ github.head_ref || github.ref_name }}" \
+              -f env="$env" \
+              -f function_name="${{ inputs.function_name }}"; then
+              echo "Failed to trigger workflow, trying alternative method..."
+              exit 1
+            fi
+
+          else
+
+            if ! gh workflow run .github/workflows/${{ inputs.deploy_workflow }} \
+              --repo ${{ github.repository }} \
+              --ref "${{ github.head_ref || github.ref_name }}" \
+              -f env="$env" \
+              -f image_tag="${{ steps.check_env.outputs.image_tag }}"; then
+              echo "Failed to trigger workflow, trying alternative method..."
+              exit 1
+            fi
+
           fi
 
         done
