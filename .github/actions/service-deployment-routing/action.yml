@@ -119,7 +119,8 @@ runs:
               --repo ${{ github.repository }} \
               --ref "${{ github.head_ref || github.ref_name }}" \
               -f env="$env" \
-              -f function_name="${{ inputs.function_name }}"; then
+              -f function_name="${{ inputs.function_name }}" \
+              -f commit_sha="${{ steps.check_env.outputs.image_tag }}"; then
               echo "Failed to trigger workflow, trying alternative method..."
               exit 1
             fi
