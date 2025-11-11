@@ -3,11 +3,14 @@ description: 'Route deployment based on branch/PR status and trigger appropriate
 
 inputs:
   image_tag:
-    description: 'Docker image tag to deploy'
+    description: 'Docker image tag/Function SHA to deploy'
     required: true
   deploy_workflow:
     description: 'Path to the deploy workflow to call'
     required: true
+  function_name:
+    description: 'Function name to deploy'
+    required: false
   workload_identity_provider:
     description: 'Workload identity provider for GCP authentication'
     required: true
@@ -109,14 +112,16 @@ runs:
         IFS=',' read -ra ENVS <<< "${{ steps.check_env.outputs.envs }}"
         for env in "${ENVS[@]}"; do
           echo "Triggering deployment to: $env"
-          # Try using the workflow file path first
+
           if ! gh workflow run .github/workflows/${{ inputs.deploy_workflow }} \
             --repo ${{ github.repository }} \
             --ref "${{ github.head_ref || github.ref_name }}" \
             -f env="$env" \
+            -f function_name="${{ inputs.function_name }}" \
             -f image_tag="${{ steps.check_env.outputs.image_tag }}"; then
             echo "Failed to trigger workflow, trying alternative method..."
             exit 1
           fi
+
         done
       shell: bash
