@@ -72,21 +72,21 @@ runs:
             echo "No PR to main or master exists, proceeding with deployment"
           else
 
-            if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-              echo "inputs.function_name_env = '${{ inputs.function_name_env }}'"
+            if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.function_name_env }}" ]]; then
+              echo "This is a user request deployment of a function to a specific environmnet - proceeding with deployment"
             else
-              echo "This is not a workflow_dispatch event !!!"
-            fi
 
-            # This is a branch build - check if there are ANY PRs involving this branch
-            prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
-            prs_as_base=$(gh pr list --base "${{ github.ref_name }}" --state open --json number --jq length)
-            total_prs=$((prs_as_head + prs_as_base))
-            if [ "$total_prs" -gt 0 ]; then
-              echo "Found $total_prs PR(s) involving branch '${{ github.ref_name }}' - skipping deployment"
-              exit 0
+              # This is a branch build - check if there are ANY PRs involving this branch
+              prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
+              prs_as_base=$(gh pr list --base "${{ github.ref_name }}" --state open --json number --jq length)
+              total_prs=$((prs_as_head + prs_as_base))
+              if [ "$total_prs" -gt 0 ]; then
+                echo "Found $total_prs PR(s) involving branch '${{ github.ref_name }}' - skipping deployment"
+                exit 0
+              fi
+              echo "No PR to main or master exists, proceeding with deployment"
+
             fi
-            echo "No PR to main or master exists, proceeding with deployment"
           fi
 
           # determine the name of the environment (we had to put rules on this with respect to the cloud provider and our sanity)
@@ -100,6 +100,12 @@ runs:
           done
           # Truncate to 30 characters
           eph_env=$(echo "$eph_env" | cut -c1-30)
+
+          # if this is a user request deployment of a function to a specific environmnet, use the environment name provided
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.function_name_env }}" ]]; then
+            eph_env="${{ inputs.function_name_env }}"
+          fi
+
           echo "Checking for GCP project: $eph_env"
           
           # Check if GCP project exists
