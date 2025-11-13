@@ -11,6 +11,9 @@ inputs:
   function_name:
     description: 'Function name to deploy'
     required: false
+  function_name_env:
+    description: 'Environment name set on manual deploys of functions'
+    required: false
   workload_identity_provider:
     description: 'Workload identity provider for GCP authentication'
     required: true
@@ -68,18 +71,25 @@ runs:
             fi
             echo "No PR to main or master exists, proceeding with deployment"
           else
-            # This is a branch build - check if there are ANY PRs involving this branch
-            prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
-            prs_as_base=$(gh pr list --base "${{ github.ref_name }}" --state open --json number --jq length)
-            total_prs=$((prs_as_head + prs_as_base))
-            if [ "$total_prs" -gt 0 ]; then
-              echo "Found $total_prs PR(s) involving branch '${{ github.ref_name }}' - skipping deployment"
-              exit 0
+
+            if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.function_name_env }}" ]]; then
+              echo "This is a user request deployment of a function to a specific environmnet - proceeding with deployment"
+            else
+
+              # This is a branch build - check if there are ANY PRs involving this branch
+              prs_as_head=$(gh pr list --head "${{ github.ref_name }}" --state open --json number --jq length)
+              prs_as_base=$(gh pr list --base "${{ github.ref_name }}" --state open --json number --jq length)
+              total_prs=$((prs_as_head + prs_as_base))
+              if [ "$total_prs" -gt 0 ]; then
+                echo "Found $total_prs PR(s) involving branch '${{ github.ref_name }}' - skipping deployment"
+                exit 0
+              fi
+              echo "No PR to main or master exists, proceeding with deployment"
+
             fi
-            echo "No PR to main or master exists, proceeding with deployment"
           fi
 
-          # determine the name of the ephemeral environment (we had to put rules on this with respect to the cloud provider and our sanity)
+          # determine the name of the environment (we had to put rules on this with respect to the cloud provider and our sanity)
           eph_env="${GITHUB_REPOSITORY//\//-}-$([ "${{ github.event_name }}" = "pull_request" ] && echo "$GITHUB_HEAD_REF" || echo "$GITHUB_REF_NAME")"
           eph_env=$(echo "$eph_env" | tr '[:upper:]' '[:lower:]')
           # Replace single-quote, double-quote, space, and exclamation point with hyphens
@@ -90,17 +100,23 @@ runs:
           done
           # Truncate to 30 characters
           eph_env=$(echo "$eph_env" | cut -c1-30)
+
+          # if this is a user request deployment of a function to a specific environmnet, use the environment name provided
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.function_name_env }}" ]]; then
+            eph_env="${{ inputs.function_name_env }}"
+          fi
+
           echo "Checking for GCP project: $eph_env"
           
           # Check if GCP project exists
           if gcloud projects describe "$eph_env" --quiet 2>/dev/null; then
             echo "envs=$eph_env" >> $GITHUB_OUTPUT
             echo "image_tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
-            echo "Ephemeral environment found: $eph_env"
+            echo "Environment found: $eph_env"
           else
             echo "envs=" >> $GITHUB_OUTPUT
             echo "image_tag=" >> $GITHUB_OUTPUT
-            echo "No ephemeral environment found for: $eph_env"
+            echo "No environment found for: $eph_env"
             exit 0
           fi
         fi
